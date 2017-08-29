@@ -38,7 +38,9 @@ def main():
     products_df = pd.read_csv('product_list.csv')
 
     # calculating
+    print('Based on counts')
     print(based_on_count(ratings_df, products_df, n))
+    print('Based on mean')
     print(based_on_mean(ratings_df, products_df, n))
 
 if __name__ == "__main__":

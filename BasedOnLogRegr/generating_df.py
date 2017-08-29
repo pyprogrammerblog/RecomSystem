@@ -14,6 +14,5 @@ numpy_serie = np.array(np.random.randint(0, 2, size=(1, 25)))
 df_target = pd.DataFrame(numpy_serie, columns=list('ABCDEFGHIJKLMNOPQRSTUVWXY'))
 df_target.to_csv('product.csv', index_label=False)
 
-
 print(df)
 print(df_target)
