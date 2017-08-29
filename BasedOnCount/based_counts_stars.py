@@ -12,7 +12,7 @@ def based_on_count(ratings_df, products_df, n):
     # filter and return most valued product
     most_valued = counts_ascending_df.head(n).index.tolist()
 
-    return products_df[products_df['productID'].isin(most_valued)]
+    return products_df.loc[most_valued]
 
 
 def based_on_mean(ratings_df, products_df, n):
@@ -27,7 +27,7 @@ def based_on_mean(ratings_df, products_df, n):
     # # filter and return most valued product
     most_valued = counts_avg_df.head(n).index.tolist()
 
-    return products_df[products_df['productID'].isin(most_valued)]
+    return products_df.loc[most_valued]
 
 
 def main():

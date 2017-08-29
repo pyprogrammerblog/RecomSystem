@@ -16,7 +16,6 @@ if not any(s.duplicated(subset=['userID', 'productID'])):
 
 
 df2 = pd.DataFrame()
-df2['productID'] = np.arange(n_products)
 df2['productName'] = pd.util.testing.rands_array(10, n_products)
 
 df2.to_csv('product_list.csv', index_label=False)
