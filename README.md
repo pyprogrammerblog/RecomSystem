@@ -1,9 +1,9 @@
 # RecomSystem
 Recommendation System in Python
 
-Based on Counting
-Based on Average
-Based on Pearson Correlation
-Based on K Nearest Neighbors
-Based on Collaborative Filtering
-Based on Logistic Regression
+1. Based on Counting
+2. Based on Average
+3. Based on Pearson Correlation
+4. Based on K Nearest Neighbors
+5. Based on Collaborative Filtering
+6. Based on Logistic Regression
