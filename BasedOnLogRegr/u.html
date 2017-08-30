@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p>Hello, guys! Welcome to this post about Recommendation Systems! Today, I will try to show how to make a recommendation system and the main ways to build it up.</p>
+<p>First, I will cover some <strong>Non-Machine Learning options</strong> as general counting, product correlation, rating average and after I will cover three <strong>Machine Learning</strong> methods: <strong>Logistic Regression, Collaborative Filtering and K Nearest Neighbors</strong>.</p>
+
+<h2 class="post-title">Non-Machine Learning methods</h2>
+<p>In the coming examples I will be using two data frames generated randomly. You can check the full code here for the generator here. The first one contains 10000 entries with the rating of 1000 clients. So client can have rated more than one product or None.</p>
+<pre><code>   userID  productID  rating
+0     624         34       2
+1     386         38       1
+2     582          1       2
+3     592         28       3
+4     827         39       1
+...</code></pre>
+<p>The second one is a table with product Ids and product names.</p>
+<pre><code>   productName
+0  h2C629KuB3
+1  ZyDY678ewO
+2  HZAw6QtMKE
+3  Jd2sF59FUj
+4  DW2FSeQh0j
+...</code></pre>
+<h3 class='post-title'>Most Rated Product</h3>
+<p>This is the most primary way of recommending to a client a product. It is just taking a list of rated product (these product should have been rated more than once), then count the ratings and give to client the most rated ones.</p>
+<p>So in our script we will group the rating dataframe by products and aggregate or count all ratings associated to a product. When we group by product we move from a dataframe of about 1000 rows to a one of about 50 rows (products).</p>
+<pre><code>import pandas as pd
+
+
+def based_on_count(ratings_df, products_df, n):
+    """
+    Based on count
+    """
+    # group by and count
+    counts_df = pd.DataFrame(ratings_df.groupby('productID')['rating'].count())
+    counts_ascending_df = counts_df.sort_values('rating', ascending=False)
+
+    # filter and return most valued product
+    most_valued = counts_ascending_df.head(n).index.tolist()
+
+    return products_df.loc[most_valued]
+
+
+def main():
+
+    # inputs. I want a feedback of 5 products.
+    n = 5
+    ratings_df = pd.read_csv('product_ratings.csv')
+    products_df = pd.read_csv('product_list.csv')
+
+    # calculating
+    print('Based on counts')
+    print(based_on_count(ratings_df, products_df, n))
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p>And the output.</p>
+<pre><code>Based on counts
+   productName
+8   onoYF0DObo
+33  FbtmAdqotr
+49  sLAtFktqIX
+27  8m3Fw7PTXf
+45  TyCGS47ezF</code></pre>
+<p>As you see in this method there is no interaction with customer tastes. But it is good to give a quick approach, just give to me the 5 top products.</p>
+<h3>High average in Product Rating</h3>
+<p>This method takes into account a number of times the product was rated. As an average, it will "centralize" a set of ratings for a product. So basically is taking all ratings for a product and calculating the average. The final data frame should have about 50 rows, one for product.</p>
+
+<pre><code>import pandas as pd
+
+
+def based_on_avg(ratings_df, products_df, n):
+    """
+    Based on avg
+    """
+    # group by and count
+    counts_df = pd.DataFrame(ratings_df.groupby('productID')['rating'].count())
+    counts_df['rating_avg'] = pd.DataFrame(ratings_df.groupby('productID')['rating'].mean())
+    counts_avg_df = counts_df.sort_values('rating_avg', ascending=False)
+
+    # filter and return most valued product
+    most_valued = counts_avg_df.head(n).index.tolist()
+
+    return products_df.loc[most_valued]
+
+
+def main():
+
+    # inputs. I want a feedback of 5 products.
+    n = 5
+    ratings_df = pd.read_csv('product_ratings.csv')
+    products_df = pd.read_csv('product_list.csv')
+
+    # calculating
+    print('Based on average')
+    print(based_on_avg(ratings_df, products_df, n))
+
+if __name__ == "__main__":
+    main()</code></pre>
+
+<p>And the output.</p>
+<pre><code>Based on average
+   productName
+49  sLAtFktqIX
+40  SruKk5BUZX
+28  1PaMIpyB7D
+9   XSp17GQM9v
+18  m5qiJh8Wpp</code></pre>
+<p>As you see in this method the amount of times rated was include as part of the average so.</p>
+<h3>High correlation in Pivot Matrix of Rating</h3>
+<p>This method takes into account the correlation between products. To do that we need a matrix with products as columns and users as rows (pivot matrix). Then we can calculated the correlation between columns and way of seeing how correlated are products. The more correlation the more similarity. The pivot matrix should look like this.</p>
+<pre><code>productID   0    1    2    3    4    5    6    7    8    9  ...    40   41  \
+userID                                                      ...
+0          NaN  NaN  NaN  2.0  NaN  3.0  NaN  NaN  2.0  1.0 ...   2.0  NaN
+1          NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN ...   NaN  NaN
+2          NaN  NaN  NaN  NaN  NaN  NaN  1.0  NaN  NaN  NaN ...   NaN  NaN
+3          NaN  NaN  NaN  NaN  2.0  NaN  NaN  NaN  NaN  NaN ...   NaN  NaN</code></pre>
+<p>And here the code to perform this method.</p>
+<pre><code>import pandas as pd
+
+
+def based_on_corr(ratings_df, products_df, name, number):
+    """
+    Based on correlation
+    """
+    # Utility  1000x50  1000 people x 50 product
+    ratings_pivot = pd.pivot_table(
+        data=ratings_df,
+        values='rating',
+        index='userID',
+        columns='productID'
+    )
+
+    # we want to know corr values of product with id = id respect to the rest of products.
+    index_column = products_df[products_df['productName'] == name].index[0]
+    pearson = ratings_pivot.corrwith(ratings_pivot[index_column])
+
+    # make a proper dataframe aggregating column name, pearson.
+    # Index is keeping same order than productID so concat products description
+    similar_products = pd.DataFrame(pearson, columns=['Pearson_Corr'])
+    similar_products.dropna(inplace=True)
+    similar_products = pd.concat([similar_products, products_df], axis=1)
+
+    return similar_products.sort_values('Pearson_Corr', ascending=False).head(number)
+
+
+def main():
+    number = 5
+    name = 'Zg6RBsBX4f'
+    ratings_df = pd.read_csv('product_ratings.csv')
+    products_df = pd.read_csv('product_list.csv')
+
+    print(based_on_corr(ratings_df, products_df, name, number))
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p>And the output is this.</p>
+<pre><code>           Pearson_Corr productName
+productID
+9              1.000000  Zg6RBsBX4f
+14             0.423603  sPCijMXvk8
+0              0.357877  iaA7tesOYC
+44             0.315668  XPDHWrUDFQ
+11             0.289126  fh6Xtvg6cA</code></pre>
+<p>The main problem of this method is that is not separating products from users. So imagine that a new user rate a product very differently from the average who rated before. This will inpact dramatically on the correlation. So, we need to find a matrix like <strong>Products x Products</strong>, and <strong>not User x Product</strong>. By doing so, if there is a new rate quite different from the average it will be absorb and attenuate.</p>
+<p>This problem will be fix in <strong>collaborative filtering</strong> in the coming examples.</p>
+
+<h2 class="post-title">Machine Learning methods</h2>
+<p>In this section we will study</p>
+<ul>
+<li>Logistic Regression.</li>
+<li>Key Nearest Neighbours.</li>
+<li>Collaborative Filtering.</li>
+</ul>
+<p>Let us start with Logistic regression.</p>
+<h3>Logistic Regression</h3>
+<p>Logistic regression is a regression model where the dependent variable is categorical (0, 1).</p>
+<pre><code>import pandas as pd
+
+
+def based_on_corr(ratings_df, products_df, name, number):
+    """
+    Based on correlation
+    """
+    # Utility  1000x50  1000 people x 50 product
+    ratings_pivot = pd.pivot_table(
+        data=ratings_df,
+        values='rating',
+        index='userID',
+        columns='productID'
+    )
+
+    # we want to know corr values of product with id = id respect to the rest of products.
+    index_column = products_df[products_df['productName'] == name].index[0]
+    pearson = ratings_pivot.corrwith(ratings_pivot[index_column])
+
+    # make a proper dataframe aggregating column name, pearson.
+    # Index is keeping same order than productID so concat products description
+    similar_products = pd.DataFrame(pearson, columns=['Pearson_Corr'])
+    similar_products.dropna(inplace=True)
+    similar_products = pd.concat([similar_products, products_df], axis=1)
+
+    return similar_products.sort_values('Pearson_Corr', ascending=False).head(number)
+
+
+def main():
+    number = 5
+    name = 'Zg6RBsBX4f'
+    ratings_df = pd.read_csv('product_ratings.csv')
+    products_df = pd.read_csv('product_list.csv')
+
+    print(based_on_corr(ratings_df, products_df, name, number))
+
+if __name__ == "__main__":
+    main()</code></pre>
+</body>
+</html>
