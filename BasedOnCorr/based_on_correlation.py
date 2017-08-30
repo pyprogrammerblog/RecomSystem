@@ -24,7 +24,7 @@ def based_on_corr(ratings_df, products_df, name, number):
 
 def main():
     number = 5
-    name = 'Zg6RBsBX4f'
+    name = 'WJ8VxMNsJu'
     ratings_df = pd.read_csv('product_ratings.csv')
     products_df = pd.read_csv('product_list.csv')
 

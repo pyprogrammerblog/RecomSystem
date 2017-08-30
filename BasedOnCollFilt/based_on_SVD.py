@@ -40,7 +40,7 @@ def based_on_svd(ratings_df, products_df, name, corr_value):
 
 def main():
     # client requirements, highly correlated product with name:
-    name = 'CNIwdVaBLH'
+    name = 'rfSMyVmnGQ'
     corr_value = 0.7
 
     # model source
