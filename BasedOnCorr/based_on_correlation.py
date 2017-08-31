@@ -17,9 +17,11 @@ def based_on_corr(ratings_df, products_df, name, number):
     # products description
     similar_products = pd.DataFrame(pearson, columns=['Pearson_Corr'])
     similar_products.dropna(inplace=True)
-    similar_products = pd.concat([similar_products, products_df], axis=1)
+    similar_products = similar_products.sort_values('Pearson_Corr', ascending=False)
 
-    return similar_products.sort_values('Pearson_Corr', ascending=False).head(number)
+    most_valued = similar_products.head(number).index.tolist()
+
+    return products_df.loc[most_valued]
 
 
 def main():

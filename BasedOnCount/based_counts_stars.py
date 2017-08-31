@@ -24,7 +24,7 @@ def based_on_mean(ratings_df, products_df, n):
     counts_df['rating_avg'] = pd.DataFrame(ratings_df.groupby('productID')['rating'].mean())
     counts_avg_df = counts_df.sort_values('rating_avg', ascending=False)
 
-    # # filter and return most valued product
+    # filter and return most valued product
     most_valued = counts_avg_df.head(n).index.tolist()
 
     return products_df.loc[most_valued]
@@ -32,7 +32,7 @@ def based_on_mean(ratings_df, products_df, n):
 
 def main():
 
-    # inputs
+    # inputs. I want a feedback of 5 products
     n = 5
     ratings_df = pd.read_csv('product_ratings.csv')
     products_df = pd.read_csv('product_list.csv')
